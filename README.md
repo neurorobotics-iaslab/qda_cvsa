@@ -1,0 +1,1 @@
+for the features is important that is followed the same way used to create a dataset, so all channels with same bands must be close each other
