@@ -21,6 +21,8 @@ class Qda:
         rospy.Subscriber('/cvsa/features', features, self.callback)
         self.pub = rospy.Publisher('/cvsa/neuroprediction', NeuroOutput, queue_size=10)
         
+        self.create_file = True
+        
         rospy.spin()
         
     def configure(self, path_qda_file):
@@ -65,13 +67,19 @@ class Qda:
         all_bands = [all_bands[i:i+2].tolist() for i in range(0, len(all_bands), 2)]
         data = np.reshape(msg.data, (len(all_bands), len(msg.data)//len(all_bands)))
         
-        with open('/home/paolo/cvsa_ws/src/qda_cvsa/test/features_sended.csv', 'a', newline='') as file:
+        if self.create_file:
+            mode = 'w'
+            self.create_file = False
+        else:
+            mode = 'a'
+        
+        with open('/home/paolo/cvsa_ws/src/qda_cvsa/test/features_sended.csv', mode, newline='') as file:
             writer = csv.writer(file)
         
             # Write the data to the CSV file
             writer.writerow(msg.data)
             
-        with open('/home/paolo/cvsa_ws/src/qda_cvsa/test/features_extracted.csv', 'a', newline='') as file:
+        with open('/home/paolo/cvsa_ws/src/qda_cvsa/test/features_extracted.csv', mode, newline='') as file:
             writer = csv.writer(file)
         
             # Write the data to the CSV file
