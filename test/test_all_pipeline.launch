@@ -23,7 +23,7 @@
 		<arg name="autostart" default='true'/>
 		<arg name="filepath"  default='/home/paolo/cvsa_ws/record' />
     <!-- arguments protocol -->
-		<arg name="subject"   default="c7_new"/>
+		<arg name="subject"   default="c7_vis"/>
 		<arg name="task"      default="cvsa_lbrb"/>
 		<arg name="extra"     default=""/>
         <arg name="modality" 	     default='evaluation'/>

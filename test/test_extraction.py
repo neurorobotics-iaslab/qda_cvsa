@@ -13,6 +13,8 @@ class Qda:
     def __init__(self):
         rospy.init_node('test_extraction', anonymous=True)
         yaml_file = rospy.get_param('~path_qda_decoder')
+        subject = rospy.get_param('~subject')
+        yaml_file = yaml_file + '/cfg/qda_' + subject + '.yaml'
 
         self.configure(yaml_file)
         
@@ -58,8 +60,6 @@ class Qda:
     def callback(self, msg):
         
         dfet = self.extract_features(msg)
-        
-        print('Recived')
         
         all_bands = np.array(msg.bands)
         all_bands = [all_bands[i:i+2].tolist() for i in range(0, len(all_bands), 2)]
