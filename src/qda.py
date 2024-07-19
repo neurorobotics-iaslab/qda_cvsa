@@ -52,7 +52,7 @@ class Qda:
             c_band_features = self.bands_features[i]
             for j in range(0, len(all_bands)):
                 if all(c_band_features == all_bands[j]):
-                    dfet.append(data[j][self.idchans_features[i]-1]) ######## TODO: with gdf place -1 in the channels selection
+                    dfet.append(data[j][self.idchans_features[i]]) ######## TODO: with ofline place -1 in the channels selection
                     
         return dfet
         
