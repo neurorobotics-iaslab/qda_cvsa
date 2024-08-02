@@ -50,18 +50,18 @@
         <arg name="eye_calibration"    default='False'/> <!-- if false the node will not start -->
 
     <!-- node eye_decoder -->
-    <node name="eye_decoder" pkg="eye_decoder" type="eye_decoder_node.py" output="screen" >
+    <!--node name="eye_decoder" pkg="eye_decoder" type="eye_decoder_node.py" output="screen" >
         <param name="cam_source"          type="int"               value="$(arg cam_source)"/>
         <param name="rate"                type="int"               value="$(arg rate)"/>
         <param name="show_frame"          type="bool"              value="$(arg show_frame)"/>
         <param name="blink_threshold"     type="double"            value="$(arg blink_threshold)"/>
-    </node>
+    </node-->
 
   	<!-- node eye_calibration online -->
-	<node pkg="eye_motion_online" type="online_eye_node" name="online_eye_node" if="$(arg eye_calibration)" output="screen">
+	<!--node pkg="eye_motion_online" type="online_eye_node" name="online_eye_node" if="$(arg eye_calibration)" output="screen">
 		<rosparam param="classes" subst_value="True">$(arg calibration_classes)</rosparam>
 		<rosparam param="th_frame" subst_value="True">$(arg th_frame)</rosparam>
-    </node>
+    </node-->
 
 
     <!-- PROCESSING -->
@@ -98,18 +98,16 @@
     <!-- INTEGRATOR -->
     <!-- arguments -->
     <arg name="plugin_integrator" default='rosneuro::integrator::Buffer'/>
-	<arg name="n_classes" default="2" /> 
-	<arg name="buffer_size" default="64" /> 
-	<arg name="increment" default="0" /> 
-	<arg name="init_val" default="[0.,0.]" /> 
+	<arg name="buffers_size" default="64" /> 
+	<arg name="classes"          default='[730, 731]'/>
+	<arg name="init_percentual" default="[0.5,0.5]" /> 
 
     <!-- node -->
 	<node name="integrator" pkg="rosneuro_integrator" type="integrator" output="screen" >
 		<param name="plugin" 	  value="$(arg plugin_integrator)"/>
-		<param name="buffer_size" value="$(arg buffer_size)"/>
-		<param name="n_classes" value="$(arg n_classes)"/>
-		<param name="increment" value="$(arg increment)"/>
-		<rosparam param="init_val" subst_value="True">$(arg init_val)</rosparam>
+		<rosparam param="buffers_size" subst_value="True">$(arg buffers_size)</rosparam>
+		<rosparam param="classes" subst_value="True">$(arg classes)</rosparam>
+		<rosparam param="init_percentual" subst_value="True">$(arg init_percentual)</rosparam>
 	</node>
 
 
