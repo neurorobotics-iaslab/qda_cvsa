@@ -1,0 +1,61 @@
+QdaCfg:
+  name: qda
+  params:
+    subject: h7
+    filename: qda
+    filename_dataset: /home/riccardo/test_ws/records/h7/dataset/logband_f_cf_selectedband.mat
+    files:
+    - h7.20240801.171358.calibration.cvsa_lbrb.gdf
+    - h7.20240801.171810.calibration.cvsa_lbrb.gdf
+    type_data: logbandpower
+    nclasses: 2
+    classlbs:
+    - 730
+    - 731
+    nfeatures: 2
+    chans:
+    - P
+    - '6'
+    - P
+    - '6'
+    idchans:
+    - 32
+    - 32
+    sampleRate: 512
+    band:
+    - - 14
+      - 16
+    - - 16
+      - 18
+    filterOrder: 4
+    priors:
+    - 0.5
+    - 0.5
+    means:
+    - - 0.40796649439334665
+      - 0.25620358671983284
+    - - 0.5590122829000287
+      - 0.3898413582021959
+    covs:
+    - - - 1.0
+        - 0.0
+      - - 0.0
+        - 1.0
+    - - - 1.0000000000000002
+        - 0.0
+      - - 0.0
+        - 1.0000000000000002
+    rotations:
+    - - - -0.7290441678511479
+        - 0.6844666546459567
+      - - -0.6844666546459567
+        - -0.7290441678511479
+    - - - 0.7395112918707303
+        - -0.6731441518691845
+      - - 0.6731441518691845
+        - 0.7395112918707303
+    scalings:
+    - - 1.0
+      - 1.0
+    - - 1.0
+      - 1.0
