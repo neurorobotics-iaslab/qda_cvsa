@@ -11,12 +11,9 @@ import numpy as np
 class Qda:
     def __init__(self):
         rospy.init_node('qda', anonymous=True)
-        yaml_file = rospy.get_param('~path_qda_decoder')
-        self.subject = rospy.get_param('~subject')
-        yaml_file = yaml_file + '/cfg/qda_' + self.subject + '.yaml'
-
+        yaml_file = rospy.get_param('~path_qda_decoder') 
         self.configure(yaml_file)
-        
+  
         rospy.Subscriber('/cvsa/features', features, self.callback)
         self.pub = rospy.Publisher('/cvsa/neuroprediction', NeuroOutput, queue_size=10)
         
@@ -39,29 +36,33 @@ class Qda:
         
         # save parameters to extract the correct features
         self.bands_features =  np.array(params['QdaCfg']['params']['band'])
-        self.idchans_features = np.array(params['QdaCfg']['params']['idchans']) - 1
-        
+        self.idchans_features = np.array(params['QdaCfg']['params']['idchans']) - 1 # how matlab save
+    
     def extract_features(self, msg):
-        all_bands = np.array(msg.bands)
-        all_bands = [all_bands[i:i+2].tolist() for i in range(0, len(all_bands), 2)]
-        data = np.reshape(msg.data, (len(all_bands), len(msg.data)//len(all_bands)))
+        data = msg.data
+        all_bands = np.array(msg.bands).reshape(-1, 2)
+        nrows = len(all_bands)
+        ncols = len(data) // nrows
         
-        # take the bands of interest
+        # Reshape the data
+        reshaped_data = np.array(data).reshape(nrows, ncols)
+        
+        
+        # Concatenate the features
         dfet = []
-        for i in range(0, len(self.bands_features)):
-            c_band_features = self.bands_features[i]
-            for j in range(0, len(all_bands)):
-                if all(c_band_features == all_bands[j]):
-                    dfet.append(data[j][self.idchans_features[i]]) ######## TODO: with ofline place -1 in the channels selection
-                    
+        for i, c_band_features in enumerate(self.bands_features):
+            for j, filter_band in enumerate(all_bands):
+                if np.array_equal(c_band_features, filter_band):
+                    dfet.append(reshaped_data[j, self.idchans_features[i]])
+                    break  # Exit the inner loop once a match is found
+        
         return dfet
         
     def callback(self, msg):
         
         dfet = self.extract_features(msg)
         
-        dfet = np.array(dfet)
-        dfet = dfet.reshape(1, -1)
+        dfet = np.array(dfet).reshape(1, -1)
         prob = self.qda.predict_proba(dfet)
         
         output = NeuroOutput()

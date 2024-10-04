@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+# Node to test the extraction of features and the prediction of the QDA model, save the features and the QDA_value into 2
+# different csv files
+
 import yaml
 import pickle
 import rospy
@@ -12,10 +15,7 @@ import csv
 class Qda:
     def __init__(self):
         rospy.init_node('test_extraction', anonymous=True)
-        yaml_file = rospy.get_param('~path_qda_decoder')
-        subject = rospy.get_param('~subject')
-        yaml_file = yaml_file + '/cfg/qda_' + subject + '.yaml'
-
+        yaml_file = rospy.get_param('~path_qda_decoder') 
         self.configure(yaml_file)
         
         rospy.Subscriber('/cvsa/features', features, self.callback)
@@ -43,20 +43,25 @@ class Qda:
         # save parameters to extract the correct features
         self.bands_features =  np.array(params['QdaCfg']['params']['band'])
         self.idchans_features = np.array(params['QdaCfg']['params']['idchans']) - 1 #### keep this -1 for matlab
-        
+    
     def extract_features(self, msg):
-        all_bands = np.array(msg.bands)
-        all_bands = [all_bands[i:i+2].tolist() for i in range(0, len(all_bands), 2)]
-        data = np.array(np.reshape(msg.data, (len(all_bands), len(msg.data)//len(all_bands))))
+        data = msg.data
+        all_bands = np.array(msg.bands).reshape(-1, 2)
+        nrows = len(all_bands)
+        ncols = len(data) // nrows
         
-        # take the bands of interest
+        # Reshape the data
+        reshaped_data = np.array(data).reshape(nrows, ncols)
+        
+        
+        # Concatenate the features
         dfet = []
-        for i in range(0, len(self.bands_features)):
-            c_band_features = self.bands_features[i]
-            for j in range(0, len(all_bands)):
-                if all(c_band_features == all_bands[j]):
-                    dfet.append(data[j][self.idchans_features[i]-1]) ######## TODO: remove the -1 for online (here is correct due to EOG)
-      
+        for i, c_band_features in enumerate(self.bands_features):
+            for j, filter_band in enumerate(all_bands):
+                if np.array_equal(c_band_features, filter_band):  
+                    dfet.append(reshaped_data[j, self.idchans_features[i]])
+                    break  # Exit the inner loop once a match is found
+        
         return dfet
         
     def callback(self, msg):
@@ -85,15 +90,20 @@ class Qda:
             # Write the data to the CSV file
             writer.writerow(dfet)
             
-        
-        dfet = np.array(dfet)
-        dfet = dfet.reshape(1, -1)
+        dfet = np.array(dfet).reshape(1, -1)
         prob = self.qda.predict_proba(dfet)
         
         output = NeuroOutput()
         output.header.stamp = rospy.Time.now()
         output.softpredict.data = prob[0].tolist()
         #output.softpredict.data = [0.5, 0.5]
+        
+        with open('/home/paolo/cvsa_ws/src/qda_cvsa/test/ros_probs.csv', mode, newline='') as file:
+            writer = csv.writer(file)
+        
+            # Write the data to the CSV file
+            writer.writerow(np.array(prob[0].tolist()))
+        
         self.pub.publish(output)
         
    
