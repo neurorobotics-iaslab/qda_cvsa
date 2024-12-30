@@ -1,6 +1,6 @@
-
 % create the dataset log band power, selected channels and selected freq
-function [sfile,X,y] = createDataset(c_subject, day)
+% it works with gdf files of calibration files
+function [sfile,X,y] = createDataset(path)
 
 %% informations
 train_percentage = 0.75;
@@ -8,16 +8,15 @@ classes = [730 731];
 sampleRate = 512;
 filterOrder = 4;
 
-features_file = ['/home/paolo/cvsa_ws/record/' c_subject '/dataset/selected_features.mat'];
+features_file = [path '/dataset/selected_features.mat'];
 features = load(features_file);
 bands = features.selectedFeatures(:,2);
 selchs = features.selectedFeatures(:,1);
 
-sfile = ['/home/paolo/cvsa_ws/record/' c_subject '/dataset/logband_f_cf_selectedband.mat'];
-mfile = ['/home/paolo/cvsa_ws/record/' c_subject day '/mat'];
+sfile = [path '/dataset/dataset.mat'];
+mfile = [path '/mat'];
 
-%path = ['/home/riccardo/test_ws/records/' c_subject '/mat_selectedTrials'];
-path = ['/home/paolo/cvsa_ws/record/' c_subject day '/gdf/calibration'];
+path = [path '/gdf/calibration'];
 files = dir(fullfile(path, '*.gdf'));
 
 channels_label = {'FP1', 'FP2', 'F3', 'FZ', 'F4', 'FC1', 'FC2', 'C3', 'CZ', 'C4', 'CP1', 'CP2', 'P3', 'PZ', 'P4', 'POZ', 'O1', 'O2', 'EOG', ...
@@ -27,12 +26,10 @@ channels_label = {'FP1', 'FP2', 'F3', 'FZ', 'F4', 'FC1', 'FC2', 'C3', 'CZ', 'C4'
 %% initialization variable to save
 X = [];
 y = [];
-Ck = [];
 final_bands = [];
-for i=1:size(selchs,1)
-    c_selchs = selchs{i};
+for i=1:size(bands,1)
     c_band = bands{i};
-    for j=1:size(c_selchs, 1)
+    for j=1:size(c_band, 1)
         final_bands = cat(1, final_bands, c_band);
     end
 end
@@ -70,27 +67,23 @@ for idx_f = 1:length(files)
     nTrials = length(cueTYP);
 
     trialStart = find(events.TYP == 1);
-    targetHit = find(events.TYP == 897);
-     if(contains(file, 'calibration')) %% for gdf not mat
+    targetHit = find(events.TYP == 897 | events.TYP == 898 | events.TYP == 899);
+    if(contains(file, 'calibration')) % for gdf not mat, since in calibration there are also foe eye calibration
         cuePOS = cuePOS(3:end) - 1;
         cueTYP = cueTYP(3:end);
         cueDUR = cueDUR(3:end);
         cfPOS  = events.POS(events.TYP == 781)-1;
         nTrials = length(cueTYP);
-     end
+    end
 
     %% Initialization variables
-    disp('   Initialization variables')
+    disp('   Initialization variables for the behaviour as rosneuro')
     frameSize = 32;
     bufferSize = 512;
-    if idx_f==1
+    if idx_f == 1
         prev_file = 0;
     end
     X_band = [];
-    s_band = [];
-    s_pow = [];
-    s_avg = [];
-    s_log = [];
 
     for idx_band = 1:length(bands)
         c_band = bands{idx_band};
@@ -114,27 +107,27 @@ for idx_f = 1:length(files)
             data = signal(start_trial:end_trial,:);
 
             % eye movement check
-            threshold = 5.5e+04; %[25 mV]
-            disp('Checking data for eye movement')
-            result = eye_movement_check(data,channels_label,threshold,sampleRate); 
-                if result
-                    disp(['Eye movement detected: trial ' num2str(i) '/' num2str(nTrials) ' to be discarded'])
-                    %skip trial info from header
-                    events.TYP(trialStart(i):targetHit(i)) = 0;
-                    events.DUR(trialStart(i):targetHit(i)) = 0;
-                    events.POS(trialStart(i):targetHit(i)) = 0;
+            threshold = 5.5e+04; %[55 mV]
+            disp('         Checking data for eye movement')
+            result = eye_movement_check(data,channels_label,threshold,sampleRate);
+            if result
+                disp(['            Eye movement detected: trial ' num2str(i) ' discarded'])
+                %skip trial info from header
+                events.TYP(trialStart(i):targetHit(i)) = 0;
+                events.DUR(trialStart(i):targetHit(i)) = 0;
+                events.POS(trialStart(i):targetHit(i)) = 0;
 
-                    continue
-                else
-                    disp('No eye movement detected')
-                end 
+                continue
+            else
+                disp('            No eye movement detected')
+            end
 
             % application of the buffer
             if idx_band == 1
-            info.trialStart = cat(1, info.trialStart, 1+size(X_temp,1)+prev_file);
+                info.trialStart = cat(1, info.trialStart, 1+size(X_temp,1)+prev_file);
             end
 
-            nchunks = (end_trial-start_trial) / 32;
+            nchunks = (end_trial-start_trial) / frameSize;
             for j = 1:nchunks
                 frame = data((j-1)*frameSize+1:j*frameSize,:);
                 buffer(1:end-frameSize,:) = buffer(frameSize+1:end,:);
@@ -177,18 +170,15 @@ for idx_f = 1:length(files)
         %% take only interested values
         % Check if trials are stored in X_temp
         if isempty(X_temp)
-            disp('Trial skipped')
+            disp('All trials skipped')
             continue
         else
             disp('      Take only interested channels for that band')
             % In this way it's possible to keep all the previuosly selected
             % channels from the UI and compare them to the string of known
-            % channel labels
+            % channel labels -> ATTENTION: we repeat the processing for each feature
             selch = selchs(idx_band);
-            idx_interest_ch = zeros(1, numel(selch));
-            for k=1:numel(selch)
-                idx_interest_ch(k) = find(strcmp(channels_label, selch));
-            end
+            idx_interest_ch = find(strcmp(channels_label, selch));
     
             % as before
             if idx_band == 1
@@ -209,32 +199,30 @@ for idx_f = 1:length(files)
     
     % To save a matlab file, with signal and corrected events, for each gdf
     % file after trial removal due to eye movement check
-    [~, pfilename] = fileparts(files(idx_f).name);        % Extract the filename (without extension) of the processed GDF file
+    [~, pfilename] = fileparts(files(idx_f).name);        
     sfilename = [pfilename '.mat'];
     m_path = [mfile '/' sfilename];
     save(m_path, 'header','signal');
-end   
+end
 
 if ~isempty(info.trialStart)
     info.startTest = info.trialStart(floor(train_percentage * size(info.trialStart,1)));
 
-    
     % Checks if the dataset is generated with equal number of classes
-    n_class1 = sum(Ck==classes(1));
-    n_class2 = sum(Ck==classes(2));
+    n_class1 = sum(y==classes(1));
+    n_class2 = sum(y==classes(2));
     if n_class1 ~= n_class2
-    disp('Regenerate the dataset with balanced number of trials per class')
-    [X_new,y_new,info.trialStart,info.trialDUR] = balanced_dataset(X,y,classes,info.trialStart,info.trialDUR);
-    X = X_new;
-    y = y_new;
+        disp('Regenerate the dataset with balanced number of trials per class')
+        [X_new,y_new,info.trialStart,info.trialDUR] = balanced_dataset(X,y,classes,info.trialStart,info.trialDUR);
+        X = X_new;
+        y = y_new;
     end
     disp('Checked balanced dataset. Save dataset variables.')
     %% save the values
-    %X = X(:, idx_interest_ch);
     save(sfile, 'X', 'y', 'info');
 else
     disp('No trials to be saved')
-    
+
 end
 
 

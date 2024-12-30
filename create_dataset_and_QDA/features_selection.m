@@ -8,22 +8,23 @@ prompt = 'Enter "calibration" or "evaluation": ';
 test_typ = input(prompt, 's');
 day = '/20241015'; % input
 
-path = ['/home/paolo/cvsa_ws/record/' c_subject day '/gdf/' test_typ];
+path = ['/home/paolo/cvsa_ws/record/' c_subject day];
+path_gdf = [path '/gdf/' test_typ];
 chanlocs_path = '/home/paolo/new_chanlocs64.mat';
 
 if strcmp(test_typ, "evaluation")
-    feature_file = ['/home/paolo/cvsa_ws/record/' c_subject day '/dataset/fischer_scores_ev.mat'];
-    logband_file = ['/home/paolo/cvsa_ws/record/' c_subject day '/dataset/logband_power_ev.mat'];
+    feature_file = [path '/dataset/fischer_scores_ev.mat'];
+    logband_file = [path '/dataset/logband_power_ev.mat'];
 else
-    feature_file = ['/home/paolo/cvsa_ws/record/' c_subject day '/dataset/fischer_scores.mat'];
-    logband_file = ['/home/paolo/cvsa_ws/record/' c_subject day '/dataset/logband_power.mat'];
+    feature_file = [path '/dataset/fischer_scores.mat'];
+    logband_file = [path '/dataset/logband_power.mat'];
 end
 
 classes = [730,731];
 nclasses = length(classes);
 
 load(chanlocs_path);
-files = dir(fullfile(path, '*.gdf'));  
+files = dir(fullfile(path_gdf, '*.gdf'));  
 
 band = {[8 10], [10 12], [12 14], [14 16], [16 18], [8 14]};
 nbands = length(band);
@@ -39,7 +40,7 @@ channels_label = {'', '', '', '', '', '', '', '', '', '', '', '', 'P3', 'PZ', 'P
 
 %% Concatenate files
 for i=1:length(files)
-    file = fullfile(path, files(i).name);
+    file = fullfile(path_gdf, files(i).name);
 
     %load(file);
     [signal,header] = sload(file);
@@ -290,10 +291,10 @@ for i=1:length(chanlocs_label)
     end
 end
 
-% saving subject id
-currentPath = fileparts(mfilename('fullpath'));
-subj = [currentPath '/c_subject.mat'];
-save(subj,'c_subject', 'day');
+% % saving subject id
+% currentPath = fileparts(mfilename('fullpath'));
+% subj = [currentPath '/c_subject.mat'];
+% save(subj,'c_subject', 'path');
 
 % saving fischer score for UI
 rowLabels = channels_label(find(~strcmp(channels_label,'')));
@@ -307,4 +308,4 @@ electrodePos = chanlocs;
 save(logband_file,'logbandPower','electrodePos', 'band');
 
 %% Launching UI for feature selection and creation of the dataset
-UI_CVSA()
+UI_CVSA(path)
