@@ -1,5 +1,7 @@
 % create the dataset log band power, selected channels and selected freq
 % it works with gdf files of calibration files
+
+% the dataset is created starting form the cue to the end of cf
 function [sfile,X,y] = createDataset(path)
 
 %% informations
@@ -13,7 +15,7 @@ features = load(features_file);
 bands = features.selectedFeatures(:,2);
 selchs = features.selectedFeatures(:,1);
 
-sfile = [path '/dataset/dataset.mat'];
+sfile = [path '/dataset/dataset_lbp.mat'];
 mfile = [path '/mat'];
 
 path = [path '/gdf/calibration'];
@@ -44,6 +46,7 @@ info.trialStart = [];
 info.trialDUR = [];
 info.filterOrder = 4;
 info.startNewFile = [0];
+eye_calibration = input("there is eyes calibration? yes (1), no (2): ");
 
 
 %% take only interested data
@@ -68,11 +71,10 @@ for idx_f = 1:length(files)
 
     trialStart = find(events.TYP == 1);
     targetHit = find(events.TYP == 897 | events.TYP == 898 | events.TYP == 899);
-    if(contains(file, 'calibration')) % for gdf not mat, since in calibration there are also foe eye calibration
+    if(eye_calibration == 1) % ask if eye calibration, if so then there are 2 cue extra
         cuePOS = cuePOS(3:end) - 1;
         cueTYP = cueTYP(3:end);
         cueDUR = cueDUR(3:end);
-        cfPOS  = events.POS(events.TYP == 781)-1;
         nTrials = length(cueTYP);
     end
 
@@ -100,7 +102,7 @@ for idx_f = 1:length(files)
             disp(['      trial ' num2str(i) '/' num2str(nTrials)])
             % initialization variables
             buffer = nan(bufferSize, nchannels);
-            start_trial = cuePOS(i);
+            start_trial = cuePOS(i); % in this way the cue is used to fill the buffer
             end_trial = cfPOS(i) + cfDUR(i) - 1;
             % division for frameSize
             end_trial = int64(ceil(single(end_trial-start_trial)/32)*32) + start_trial;
@@ -169,7 +171,7 @@ for idx_f = 1:length(files)
 
         %% take only interested values
         % Check if trials are stored in X_temp
-        if isempty(X_temp)
+        if isempty(X_temp) 
             disp('All trials skipped')
             continue
         else
@@ -217,7 +219,7 @@ if ~isempty(info.trialStart)
         X = X_new;
         y = y_new;
     end
-    disp('Checked balanced dataset. Save dataset variables.')
+    disp('Save dataset variables.')
     %% save the values
     save(sfile, 'X', 'y', 'info');
 else

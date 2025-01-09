@@ -1,12 +1,12 @@
 %% Run for the dataset creation. It shows the logband, and the fisher to select the features
-close all; clear all; clc;
+% close all; clear all; clc;
 
 %% Define variables
 % file info
-c_subject = 'h8'; % input
+c_subject = 'test'; % input
 prompt = 'Enter "calibration" or "evaluation": ';
 test_typ = input(prompt, 's');
-day = '/20241015'; % input
+day = '/20250108'; % input
 
 path = ['/home/paolo/cvsa_ws/record/' c_subject day];
 path_gdf = [path '/gdf/' test_typ];
@@ -84,6 +84,7 @@ for f_idx=1:nbands
 end
 
 % Trial extraction
+cf_dur = min(feedb_dur); 
 trial_dur = min(TrialStop-TrialStart);
 trialData =  []; new_Rk = []; new_Ck = [];
 dataforTrial = NaN(trial_dur,nchannels,nbands,ntrials);
@@ -93,12 +94,14 @@ for trId=1:ntrials
     cstop = cstart + trial_dur - 1;
 
     dataforTrial(:,:,:,trId) = s_processed(cstart:cstop,:,:);
+    tCk(trId) = unique(nonzeros(Ck(cstart:cstop)));
 
+    cstart = feedb_pos(trId); % in order to have the cva only for cf
+    cstop = cstart + cf_dur - 1; 
     c_Rk = Rk(cstart:cstop,1);
     new_Rk = cat(1,new_Rk,c_Rk);
     c_Ck = Ck(cstart:cstop);
-    new_Ck = cat(1,new_Ck,c_Ck);
-    tCk(trId) = unique(nonzeros(Ck(cstart:cstop)));
+    new_Ck = cat(1,new_Ck,c_Ck);    
     trialData = cat(1, trialData, s_processed(cstart:cstop,:,:));
 end
 
@@ -269,8 +272,8 @@ title(['Total CVA Subj: ' c_subject]);
 % as for all the topoplot it depends on the time required!
 ERDfortrial = log(dataforTrial);
 chanlocs_label = {chanlocs.labels};
-% start_cue = input();
-period = [3 (trial_dur/events.SampleRate)]*events.SampleRate; % start_cue - end_cf
+% end_cue = input();
+period = [3 (trial_dur/events.SampleRate)]*events.SampleRate; % end_cue - end_cf -> only cf
 
 %Select channels
 sel_channels =  {'', '', '', '', '', '', '', '', '', '', '', '', 'P3', 'PZ', 'P4', 'POZ', 'O1', 'O2', '', ...

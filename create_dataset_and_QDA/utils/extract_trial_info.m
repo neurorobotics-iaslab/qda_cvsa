@@ -6,6 +6,7 @@ function [TrialStart, TrialStop, FixStart, FixStop, Ck, Tk] = extract_trial_info
     TrialStop = NaN(trials,1);
     FixStart = NaN(trials,1);
     FixStop = NaN(trials,1);
+
     for trId=1:trials
         cstart = fix_pos(trId);
         cstop = feedb_pos(trId) + feedb_dur(trId) - 1;
