@@ -80,7 +80,7 @@ for idx_f = 1:length(files)
 
     %% Initialization variables
     disp('   Initialization variables for the behaviour as rosneuro')
-    frameSize = 32;
+    chunkSize = 32;
     bufferSize = 512;
     if idx_f == 1
         prev_file = 0;
@@ -129,11 +129,11 @@ for idx_f = 1:length(files)
                 info.trialStart = cat(1, info.trialStart, 1+size(X_temp,1)+prev_file);
             end
 
-            nchunks = (end_trial-start_trial) / frameSize;
+            nchunks = (end_trial-start_trial) / chunkSize;
             for j = 1:nchunks
-                frame = data((j-1)*frameSize+1:j*frameSize,:);
-                buffer(1:end-frameSize,:) = buffer(frameSize+1:end,:);
-                buffer(end-frameSize+1:end, :) = frame;
+                frame = data((j-1)*chunkSize+1:j*chunkSize,:);
+                buffer(1:end-chunkSize,:) = buffer(chunkSize+1:end,:);
+                buffer(end-chunkSize+1:end, :) = frame;
 
                 % check
                 if any(isnan(buffer))

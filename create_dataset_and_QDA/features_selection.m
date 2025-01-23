@@ -1,5 +1,5 @@
 %% Run for the dataset creation. It shows the logband, and the fisher to select the features
-% close all; clear all; clc;
+close all; clear all; clc;
 
 %% Define variables
 % file info

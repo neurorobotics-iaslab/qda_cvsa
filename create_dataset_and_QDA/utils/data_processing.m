@@ -2,7 +2,6 @@ function s_movavg = data_processing(signal, nchannels, sampleRate, band, filtOrd
 
 % Filter Parameters
 [b_low, a_low] = butter(filtOrder, band(2)/(sampleRate/2), 'low');
-% halpha = fvtool(b_alpha,a_alpha,'Fs',SampleRate)
 [b_high, a_high] = butter(filtOrder, band(1)/(sampleRate/2), 'high');
 % Apply filters
 sfilt = zeros(size(signal));
