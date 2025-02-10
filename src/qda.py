@@ -44,7 +44,7 @@ class Qda:
         nrows = len(all_bands)
         ncols = len(data) // nrows
         
-        # Reshape the data
+        # Reshape the data -> bands x channels
         reshaped_data = np.array(data).reshape(nrows, ncols)
         
         
