@@ -36,7 +36,7 @@ class Qda:
         
         # save parameters to extract the correct features
         self.bands_features =  np.array(params['QdaCfg']['params']['band'])
-        self.idchans_features = np.array(params['QdaCfg']['params']['idchans']) - 1 # how matlab save
+        self.idchans_features = np.array(params['QdaCfg']['params']['idchans']) - 1 # matlab starts from 1 not 0
     
     def extract_features(self, msg):
         data = msg.data
