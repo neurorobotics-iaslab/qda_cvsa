@@ -1,0 +1,26 @@
+<launch>
+
+    <!-- KMEANS -->
+    <!-- arguments -->
+    <arg name="path_qda_model" default='/home/paolo/cvsa/ic_cvsa_ws/src/qda_cvsa/cfg/qda_test.yaml'/>
+    <arg name="samplerate" default='16'/>
+
+    <!-- node -->
+    <node name="qda_node" pkg="qda_cvsa" type="qda.py" output="screen"> 
+        <param name="path_qda_model"   value="$(arg path_qda_model)"/>
+    </node>
+
+    <!-- TEST NODES -->
+    <!-- logger node -->
+    <node pkg="qda_cvsa" type="test_logger_qda_cvsa" name="test_logger_qda_cvsa" output="screen">
+        <param name="output_filename" value="$(find qda_cvsa)/test/node/classified.csv"/>
+    </node>
+    
+    <!-- publisher node -->
+    <node pkg="qda_cvsa" type="test_publisher_qda_cvsa" name="test_publisher_qda_cvsa" output="screen">
+        <param name="csv_file" value="$(find qda_cvsa)/test/processed_data.csv"/>
+        <param name="sample_rate" value="$(arg samplerate)"/> 
+    </node>
+
+
+</launch>

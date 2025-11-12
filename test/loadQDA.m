@@ -5,32 +5,24 @@ function qda = loadQDA(path_file)
     qda.nclasses    = c_qda.QdaCfg.params.nclasses;
     qda.nfeatures   = c_qda.QdaCfg.params.nfeatures;
     qda.subject     = c_qda.QdaCfg.params.subject;
-    qda.samplerate  = c_qda.QdaCfg.params.sampleRate;
-    qda.filterOrder = c_qda.QdaCfg.params.filterOrder;
-    qda.interval_samples = c_qda.QdaCfg.params.interval_samples;
-    qda.auc_validationset = c_qda.QdaCfg.params.auc_validation;
+    qda.reg_param   = c_qda.QdaCfg.params.reg_param; 
 
     priors = nan(1, qda.nclasses);
     classes = nan(1, qda.nclasses);
     for i = 1:qda.nclasses
         priors(i) = c_qda.QdaCfg.params.priors{i};
-        classes(i) = c_qda.QdaCfg.params.classlbs{i};
+        classes(i) = c_qda.QdaCfg.params.classes{i};
     end
     qda.priors = priors;
     qda.classes = classes;
 
-    bands = zeros(qda.nfeatures, 2);
-    idchans = zeros(1, qda.nfeatures);
-    lbchans = cell(1, qda.nfeatures);
-    for i = 1:qda.nfeatures
-        bands(i, :) = [c_qda.QdaCfg.params.band{i, 1}, c_qda.QdaCfg.params.band{i, 2}];
-        if qda.nfeatures == 1
-            idchans(i) = c_qda.QdaCfg.params.idchans;
-            lbchans{i} = c_qda.QdaCfg.params.chans{i};
-        else
-            idchans(i) = c_qda.QdaCfg.params.idchans{i};
-            lbchans{i} = c_qda.QdaCfg.params.chans{i};
-        end
+    bands = zeros(size(c_qda.QdaCfg.params.bands));
+    idchans = zeros(size(c_qda.QdaCfg.params.idchannels));
+    lbchans = cell(size(c_qda.QdaCfg.params.idchannels));
+    for i = 1:size(c_qda.QdaCfg.params.idchannels, 1)
+        bands(i, :) = [c_qda.QdaCfg.params.bands{i, 1}, c_qda.QdaCfg.params.bands{i, 2}];
+        idchans(i,:) = cell2mat( c_qda.QdaCfg.params.idchannels(1,:));
+        lbchans(i,:) = c_qda.QdaCfg.params.channels{i};
     end
     qda.bands = bands;
     qda.idchans = idchans;

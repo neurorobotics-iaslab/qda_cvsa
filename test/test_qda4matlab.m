@@ -1,35 +1,53 @@
 %% test qda for matlab, work only for evaluations
-% clc; clear all; close all;
+clc; clear all; close all;
 
 
 %% Load features and prediction of ros
-features = load('/home/paolo/cvsa_ws/src/qda_cvsa/test/features_extracted.csv');
-ros_prob = load('/home/paolo/cvsa_ws/src/qda_cvsa/test/ros_probs.csv');
-r_all_features = load('/home/paolo/cvsa_ws/src/qda_cvsa/test/features_sended.csv');
+datapath = '/home/paolo/cvsa/ic_cvsa_ws/src/qda_cvsa/';
+features = load([datapath 'test/processed_data.csv']);
+ros_prob = load([datapath 'test/node/classified.csv']);
 
-yaml_QDA_path = '/home/paolo/cvsa_ws/src/qda_cvsa/test/qda_h7.yaml';
+yaml_QDA_path = [datapath 'cfg/qda_test.yaml'];
 qda = loadQDA(yaml_QDA_path);
 
 prob_all = [];
 for idx_feature = 1:length(features)
-    c_features = features(idx_feature,:);
+    c_features = log(features(idx_feature,qda.idchans));
     c_prob = apply_qda(qda, c_features);
     prob_all = cat(1, prob_all, c_prob);
 end
 
-max(ros_prob - prob_all, [], 'all')
+min_length = min(size(ros_prob,1), size(prob_all,1));
+
+max_1 = max(ros_prob(:,1) - prob_all(1:min_length,1));
+max_2 = max(ros_prob(:,2) - prob_all(1:min_length,2));
 
 figure();
-subplot(2, 1, 1);
+subplot(2, 2, 1);
 plot(1:size(ros_prob,1), ros_prob(:,1), 'Color', 'r');
 hold on;
-plot(1:size(ros_prob,1), prob_all(:,1), 'Color', 'b');
-title('Difference for the first class')
+plot(1:size(ros_prob,1), prob_all(1:min_length,1), 'Color', 'b');
+title('First class for both methods')
 legend('ros probs', 'matlab probs')
 
-subplot(2, 1, 2);
+subplot(2, 2, 3);
+plot(1:size(ros_prob,1), ros_prob(:,1)- prob_all(1:min_length,1), 'Color', 'r');
+hold on;
+text(0.05, 0.95, ['max diff: ' num2str(max_1)], 'Units', 'normalized');
+title('Diff ros and matlab')
+legend('Diff')
+
+
+subplot(2, 2, 2);
 plot(1:size(ros_prob,1), ros_prob(:,2), 'Color', 'r');
 hold on;
-plot(1:size(ros_prob,1), prob_all(:,2), 'Color', 'b');
-title('Difference for the second class')
+plot(1:size(ros_prob,1), prob_all(1:min_length,2), 'Color', 'b');
+title('Second class for both methods')
 legend('ros probs', 'matlab probs')
+
+subplot(2, 2, 4);
+plot(1:size(ros_prob,1), ros_prob(:,1) - prob_all(1:min_length,1), 'Color', 'r');
+hold on;
+text(0.05, 0.95, ['max diff: ' num2str(max_2)], 'Units', 'normalized');
+title('Diff ros and matlab')
+legend('Diff')

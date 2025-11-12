@@ -1,1 +1,0 @@
-In this directory there are the files to test the overall system. Therefore, when you build up the system tried this in order to check if the code in matlab anche the one in ros provide same output.
