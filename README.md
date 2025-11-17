@@ -53,7 +53,7 @@ This script is responsible for:
 
 ### 5. Output
 
-* **Topic:** `/cvsa/neuroprediction/qda`
+* **Topic:** `/cvsa/neuroprediction/raw`
 * **Data:** Publishes the classification probability. It is a `NeuroOutput` message, defined by the `rosneuro` package.
 
 ---

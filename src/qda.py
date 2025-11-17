@@ -24,7 +24,7 @@ class Qda:
             rospy.loginfo("QDA configurated correctly.")
   
         rospy.Subscriber('/cvsa/eeg_power', eeg_power, self.callback)
-        self.pub = rospy.Publisher('/cvsa/neuroprediction/qda', NeuroOutput, queue_size=10)
+        self.pub = rospy.Publisher('/cvsa/neuroprediction/raw', NeuroOutput, queue_size=10)
         
         rospy.spin()
         
@@ -110,6 +110,7 @@ class Qda:
         output.hardpredict.data = hard_pred_vector.tolist() 
         output.decoder.type = self.qda_name
         output.decoder.path = self.path_decoder
+        output.decoder.classes = self.qda.classes_.tolist()
         self.pub.publish(output)
         
 
