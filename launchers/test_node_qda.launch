@@ -1,0 +1,13 @@
+<launch>
+
+    <!-- QDA -->
+    <!-- arguments -->
+    <arg name="path_qda_model" default='$(find qda_cvsa)/cfg/qda_test.yaml'/>
+    <arg name="samplerate" default='16'/>
+
+    <!-- node -->
+    <node name="qda_node" pkg="qda_cvsa" type="qda.py" output="screen"> 
+        <param name="path_qda_model"   value="$(arg path_qda_model)"/>
+    </node>
+
+</launch>

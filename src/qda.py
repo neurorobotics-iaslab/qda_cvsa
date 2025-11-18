@@ -14,14 +14,14 @@ class Qda:
         try:
             self.path_decoder = rospy.get_param('~path_qda_model')
         except KeyError as e:
-            rospy.logfatal(f"Parametro mancante: {e}. Assicurati di lanciarlo con un launch file.")
+            rospy.logfatal(f"[QDA] Parametro mancante: {e}. Assicurati di lanciarlo con un launch file.")
             return
         conf = self.configure()
         if not conf:
-            rospy.logfatal("Erorr in the QDA configuration.")
+            rospy.logfatal(f"[QDA] Erorr in the QDA configuration.")
             return
         else:
-            rospy.loginfo("QDA configurated correctly.")
+            rospy.loginfo(f"[QDA] QDA configurated correctly.")
   
         rospy.Subscriber('/cvsa/eeg_power', eeg_power, self.callback)
         self.pub = rospy.Publisher('/cvsa/neuroprediction/raw', NeuroOutput, queue_size=10)
@@ -34,19 +34,19 @@ class Qda:
             with open(self.path_decoder, 'r') as file:
                 params = yaml.safe_load(file)
         except Exception as e:
-            rospy.logerr(f"Error loading QDA YAML file: {e}")
+            rospy.logerr(f"[QDA] Error loading QDA YAML file: {e}")
             return False
         
         try:
             self.qda_name = yaml.safe_load(open(self.path_decoder, 'r'))['QdaCfg']['name']
         except Exception as e:
-            rospy.logerr(f"Error loading QDA name: {e}")
+            rospy.logerr(f"[{self.qda_name}] Error loading QDA name: {e}")
             return False    
         
         try:
             qda_params = params['QdaCfg']['params']
         except Exception as e:
-            rospy.logerr(f"Error getting the QDA's parameters structure: {e}")
+            rospy.logerr(f"[{self.qda_name}] Error getting the QDA's parameters structure: {e}")
             return False
         
         # Create a new QDA model
@@ -67,7 +67,7 @@ class Qda:
             self.nfeatures = int(qda_params['nfeatures'])
             self.nclasses = int(qda_params['nclasses'])
         except Exception as e:
-            rospy.logerr(f"Error getting the QDA's parameter: {e}")
+            rospy.logerr(f"[{self.qda_name}] Error getting the QDA's parameter: {e}")
             return False
 
         return True
@@ -89,7 +89,7 @@ class Qda:
                         dfet.append(reshaped_data[idx_ch, j])
                     break 
                 
-        dfet = np.log(dfet) # apply the log transfromation    
+        dfet = np.log(dfet) # apply the log transfromation  
          
         return dfet
         
@@ -110,7 +110,7 @@ class Qda:
         output.hardpredict.data = hard_pred_vector.tolist() 
         output.decoder.type = self.qda_name
         output.decoder.path = self.path_decoder
-        output.decoder.classes = self.qda.classes_.tolist()
+        output.decoder.classes = self.qda.classes_.astype(int).tolist()
         self.pub.publish(output)
         
 

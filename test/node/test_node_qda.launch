@@ -1,8 +1,8 @@
 <launch>
 
-    <!-- KMEANS -->
+    <!-- QDA -->
     <!-- arguments -->
-    <arg name="path_qda_model" default='/home/paolo/cvsa/ic_cvsa_ws/src/qda_cvsa/cfg/qda_test.yaml'/>
+    <arg name="path_qda_model" default='$(find qda_cvsa)/cfg/qda_test.yaml'/>
     <arg name="samplerate" default='16'/>
 
     <!-- node -->
