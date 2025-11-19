@@ -19,8 +19,8 @@ end
 
 min_length = min(size(ros_prob,1), size(prob_all,1));
 
-max_1 = max(ros_prob(:,1) - prob_all(1:min_length,1));
-max_2 = max(ros_prob(:,2) - prob_all(1:min_length,2));
+max_1 = max(abs(ros_prob(:,1) - prob_all(1:min_length,1)));
+max_2 = max(abs(ros_prob(:,2) - prob_all(1:min_length,2)));
 
 figure();
 subplot(2, 2, 1);
