@@ -1,6 +1,7 @@
 %% test qda for matlab, work only for evaluations
 clc; clear all; close all;
 
+addpath('/home/paolo/cvsa/ic_cvsa_ws/src/analysis_cvsa/equal_ros')
 
 %% Load features and prediction of ros
 datapath = '/home/paolo/cvsa/ic_cvsa_ws/src/qda_cvsa/';
