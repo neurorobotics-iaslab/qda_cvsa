@@ -3,7 +3,7 @@
 import yaml
 import pickle
 import rospy
-from processing_cvsa.msg import eeg_power
+from processing_bci.msg import eeg_power
 from rosneuro_msgs.msg import NeuroOutput
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 import numpy as np
