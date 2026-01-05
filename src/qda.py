@@ -11,18 +11,19 @@ import numpy as np
 class Qda:
     def __init__(self):
         rospy.init_node('qda', anonymous=True)
+        self.qda_name = "qda_model"
         try:
             self.path_decoder = rospy.get_param('~path_qda_model')
         except KeyError as e:
-            rospy.logfatal(f"[QDA] Parametro mancante: {e}. Assicurati di lanciarlo con un launch file.")
+            rospy.logfatal(f"[{self.qda_name}] Parametro mancante: {e}. Assicurati di lanciarlo con un launch file.")
             return
         conf = self.configure()
         if not conf:
-            rospy.logfatal(f"[QDA] Erorr in the QDA configuration.")
+            rospy.logfatal(f"[{self.qda_name}] Erorr in the QDA configuration.")
             return
         else:
-            rospy.loginfo(f"[QDA] QDA configurated correctly.")
-  
+            rospy.loginfo(f"[{self.qda_name}] QDA configurated correctly.")
+
         rospy.Subscriber('/cvsa/eeg_power', eeg_power, self.callback)
         self.pub = rospy.Publisher('/cvsa/neuroprediction/raw', NeuroOutput, queue_size=10)
         
@@ -34,7 +35,7 @@ class Qda:
             with open(self.path_decoder, 'r') as file:
                 params = yaml.safe_load(file)
         except Exception as e:
-            rospy.logerr(f"[QDA] Error loading QDA YAML file: {e}")
+            rospy.logerr(f"[{self.qda_name}] Error loading QDA YAML file: {e}")
             return False
         
         try:
@@ -79,6 +80,10 @@ class Qda:
         all_bands = np.array(msg.bands).reshape(-1, 2)
         
         reshaped_data = np.array(data).reshape(nchannels, nbands)
+        
+        if len(reshaped_data) == 0:
+            rospy.error(f"[{self.qda_name}] No matching bands found between features and incoming data.")
+            return
         
         dfet = [] 
         for i, c_band_features in enumerate(self.bands_features):
