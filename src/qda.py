@@ -64,7 +64,10 @@ class Qda:
             
             # save parameters to extract the correct features
             self.bands_features =  np.array(qda_params['bands'])
-            self.idchans_features = np.array(qda_params['idchannels']) - 1 # matlab starts from 1 not 0
+            raw_idchannels = qda_params['idchannels']
+            if raw_idchannels and isinstance(raw_idchannels, list) and not isinstance(raw_idchannels[0], (list, tuple)): # here just for the cvsa case (a single list instead of a list of lists)
+                raw_idchannels = [raw_idchannels]
+            self.idchans_features = [np.array(ids) - 1 for ids in raw_idchannels]
             self.nfeatures = int(qda_params['nfeatures'])
             self.nclasses = int(qda_params['nclasses'])
         except Exception as e:
@@ -79,7 +82,7 @@ class Qda:
         nbands = msg.nbands
         all_bands = np.array(msg.bands).reshape(-1, 2)
         
-        reshaped_data = np.array(data).reshape(nchannels, nbands)
+        reshaped_data = np.array(data).reshape(nbands, nchannels) # [bands x channels]
         
         if len(reshaped_data) == 0:
             rospy.error(f"[{self.qda_name}] No matching bands found between features and incoming data.")
@@ -91,7 +94,7 @@ class Qda:
                 if np.array_equal(c_band_features, filter_band):
                     c_channels_idx = self.idchans_features[i]
                     for idx_ch in c_channels_idx:
-                        dfet.append(reshaped_data[idx_ch, j])
+                        dfet.append(reshaped_data[j, idx_ch])
                     break 
                 
         dfet = np.log(dfet) # apply the log transfromation  
