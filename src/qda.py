@@ -97,7 +97,7 @@ class Qda:
                         dfet.append(reshaped_data[j, idx_ch])
                     break 
                 
-        dfet = np.log(dfet) # apply the log transfromation  
+        dfet = np.log(dfet) # apply the log transfromation 
          
         return dfet
         
