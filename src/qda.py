@@ -85,7 +85,7 @@ class Qda:
         reshaped_data = np.array(data).reshape(nbands, nchannels) # [bands x channels]
         
         if len(reshaped_data) == 0:
-            rospy.error(f"[{self.qda_name}] No matching bands found between features and incoming data.")
+            rospy.logerr(f"[{self.qda_name}] No matching bands found between features and incoming data.")
             return
         
         dfet = [] 
@@ -96,6 +96,10 @@ class Qda:
                     for idx_ch in c_channels_idx:
                         dfet.append(reshaped_data[j, idx_ch])
                     break 
+                
+        if(len(dfet) != self.nfeatures):
+            rospy.logerr(f"[{self.qda_name}] Error in the feature extraction: expected {self.nfeatures} features, but got {len(dfet)}.")
+            return
                 
         dfet = np.log(dfet) # apply the log transfromation 
          
