@@ -1,0 +1,60 @@
+QdaCfg:
+  name: qda
+  params:
+    subject: i7
+    filename: qda
+    filename_dataset: ./datasets/gmm/cvsa/data_i7_06022026_143144_cvsa.mat
+    files_dataset:
+    - "['i7.20260206.141909.calibration.cvsa_lbrb.gdf']"
+    - "['i7.20260206.142324.calibration.cvsa_lbrb.gdf']"
+    - "['i7.20260206.142751.calibration.cvsa_lbrb.gdf']"
+    model_used_for_dataset: gmm_i7_06022026_143144_cvsa.yaml
+    nclasses: 2
+    classes:
+    - 730
+    - 731
+    training_accuracy: 0.6722106722106722
+    nfeatures: 2
+    note: idchannels are saved in matlab convention, instead channels are the used
+      one (=channels_labels(idchanels in matlab))
+    channels:
+    - - POz
+      - PO8
+    idchannels:
+    - - 9
+      - 11
+    bands:
+    - - 8
+      - 14
+    reg_param: 0.001
+    priors:
+    - 0.5
+    - 0.5
+    means:
+    - - 0.21577031581123596
+      - 1.8571478465640243
+    - - 0.5232724976738028
+      - 2.075378712710721
+    covs:
+    - - - 0.26189221092755405
+        - 0.06378575772494058
+      - - 0.06378575772494056
+        - 0.2585952897393259
+    - - - 0.32794222353772257
+        - 0.035794101380407124
+      - - 0.03579410138040714
+        - 0.1829759744208343
+    rotations:
+    - - - 0.7161826175522369
+        - 0.6979129303258584
+      - - 0.6979129303258584
+        - -0.7161826175522369
+    - - - 0.9738147412879963
+        - -0.22734302199582263
+      - - 0.22734302199582263
+        - 0.9738147412879963
+    scalings:
+    - - 0.3240508056711936
+      - 0.19643669499568622
+    - - 0.3362985759653759
+      - 0.17461962199318087
