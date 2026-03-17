@@ -1,0 +1,63 @@
+QdaCfg:
+  name: qda
+  params:
+    subject: d7
+    filename: qda
+    filename_dataset: ./datasets//mi/data_d7_17032026_164135.mat
+    files_dataset:
+    - "['d7.20260123.161745.calibration.mi_bhbf.gdf']"
+    - "['d7.20260123.162115.calibration.mi_bhbf.gdf']"
+    - "['d7.20260123.162452.calibration.mi_bhbf.gdf']"
+    nclasses: 2
+    classes:
+    - 771
+    - 773
+    training_accuracy: 0.9309071729957806
+    nfeatures: 2
+    note: idchannels are saved in matlab convention, instead channels are the used
+      one (=channels_labels(idchanels in matlab))
+    channels:
+    - - Cz
+      - C4
+    - []
+    idchannels:
+    - - 9
+      - 11
+    - []
+    bands:
+    - - 8
+      - 14
+    - - 18
+      - 24
+    reg_param: 0.01
+    priors:
+    - 0.5
+    - 0.5
+    means:
+    - - 0.17743654759671765
+      - 1.7657681969522752
+    - - 1.5094463195993735
+      - 0.756409349036635
+    covs:
+    - - - 0.33024098084278725
+        - 0.005039829166291462
+      - - 0.005039829166291453
+        - 0.31577333652703277
+    - - - 0.6744142902193764
+        - 0.16026193618783152
+      - - 0.16026193618783152
+        - 0.32953698566932715
+    rotations:
+    - - - 0.9540703889363408
+        - -0.2995825311243287
+      - - 0.2995825311243287
+        - 0.9540703889363408
+    - - - 0.9307244989116673
+        - 0.3657210783173778
+      - - 0.3657210783173778
+        - -0.9307244989116673
+    scalings:
+    - - 0.33182351059696513
+      - 0.3141908067728549
+    - - 0.737387993161956
+      - 0.2665632827267477

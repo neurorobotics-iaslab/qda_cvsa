@@ -12,20 +12,30 @@ class Qda:
     def __init__(self):
         rospy.init_node('qda', anonymous=True)
         self.qda_name = "qda_model"
+        
         try:
             self.path_decoder = rospy.get_param('~path_qda_model')
         except KeyError as e:
-            rospy.logfatal(f"[{self.qda_name}] Parametro mancante: {e}. Assicurati di lanciarlo con un launch file.")
+            rospy.logfatal(f"[{self.qda_name}] Mandatory parameter: 'path_qda_model'. Error:{e}.")
             return
+        
+        try:
+            self.paradigm = rospy.get_param('~paradigm')
+        except KeyError as e:
+            rospy.logfatal(f"[{self.qda_name}] Mandatory parameter: 'paradigm'. Error:{e}.")
+            return
+        self.qda_name += f"_{self.paradigm}"
+        
         conf = self.configure()
         if not conf:
-            rospy.logfatal(f"[{self.qda_name}] Erorr in the QDA configuration.")
+            rospy.logfatal(f"[{self.qda_name}] Error in the QDA configuration.")
             return
         else:
             rospy.loginfo(f"[{self.qda_name}] QDA configurated correctly.")
 
-        rospy.Subscriber('/cvsa/eeg_power', eeg_power, self.callback)
-        self.pub = rospy.Publisher('/cvsa/neuroprediction/raw', NeuroOutput, queue_size=10)
+
+        rospy.Subscriber('/eeg_power', eeg_power, self.callback)
+        self.pub = rospy.Publisher(f'/{self.paradigm}/neuroprediction/raw', NeuroOutput, queue_size=10)
         
         rospy.spin()
         

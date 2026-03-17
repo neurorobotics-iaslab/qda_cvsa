@@ -11,7 +11,7 @@ int main(int argc, char** argv) {
     ros::NodeHandle nh;
     ros::NodeHandle private_nh("~"); 
 
-    std::string topic = "/cvsa/eeg_power";
+    std::string topic = "/eeg_power";
     std::string csv_filename;
     double sample_rate;
 
@@ -51,8 +51,8 @@ int main(int argc, char** argv) {
     while (ros::ok()) {
         
         if (current_sample > total_samples) {
-            ROS_INFO("Fine del file CSV. Riavvio dall'inizio.");
-            current_sample = 0; 
+            ROS_INFO("File CSV ended.");
+            break;
         }
 
         Eigen::MatrixXd c_data = full_data.block(current_sample, 0, 1, n_channels);
@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
         msg.nchannels = n_channels;
         msg.nbands = 1;
         msg.seq = current_sample;
-        msg.bands = {8,14};
+        msg.bands = {8, 14};
         
         
         Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> c_data_float;

@@ -26,24 +26,24 @@ for idx_feature = 1:length(features)
     end
 end
 
+%%
+marlab_prob = prob_all()
 
-matlab_prob = prob_all(3:end,:); % align in ros we loose the first 3 messages
+min_length = min(size(ros_prob,1), size(prob_all,1));
 
-min_length = min(size(ros_prob,1), size(matlab_prob,1));
-
-max_1 = max(abs(ros_prob(:,1) - matlab_prob(1:min_length,1)));
-max_2 = max(abs(ros_prob(:,2) - matlab_prob(1:min_length,2)));
+max_1 = max(abs(ros_prob(:,1) - prob_all(1:min_length,1)));
+max_2 = max(abs(ros_prob(:,2) - prob_all(1:min_length,2)));
 
 figure();
 subplot(2, 2, 1);
 plot(1:size(ros_prob,1), ros_prob(:,1), 'Color', 'r');
 hold on;
-plot(1:size(ros_prob,1), matlab_prob(1:min_length,1), 'Color', 'b');
+plot(1:size(ros_prob,1), prob_all(1:min_length,1), 'Color', 'b');
 title('First class for both methods')
 legend('ros probs', 'matlab probs')
 
 subplot(2, 2, 3);
-plot(1:size(ros_prob,1), ros_prob(:,1)- matlab_prob(1:min_length,1), 'Color', 'r');
+plot(1:size(ros_prob,1), ros_prob(:,1)- prob_all(1:min_length,1), 'Color', 'r');
 hold on;
 text(0.05, 0.95, ['max diff: ' num2str(max_1)], 'Units', 'normalized');
 title('Diff ros and matlab')
@@ -53,12 +53,12 @@ legend('Diff')
 subplot(2, 2, 2);
 plot(1:size(ros_prob,1), ros_prob(:,2), 'Color', 'r');
 hold on;
-plot(1:size(ros_prob,1), matlab_prob(1:min_length,2), 'Color', 'b');
+plot(1:size(ros_prob,1), prob_all(1:min_length,2), 'Color', 'b');
 title('Second class for both methods')
 legend('ros probs', 'matlab probs')
 
 subplot(2, 2, 4);
-plot(1:size(ros_prob,1), ros_prob(:,1) - matlab_prob(1:min_length,1), 'Color', 'r');
+plot(1:size(ros_prob,1), ros_prob(:,1) - prob_all(1:min_length,1), 'Color', 'r');
 hold on;
 text(0.05, 0.95, ['max diff: ' num2str(max_2)], 'Units', 'normalized');
 title('Diff ros and matlab')

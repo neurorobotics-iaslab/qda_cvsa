@@ -1,0 +1,29 @@
+<launch>
+
+    <!-- QDA -->
+    <!-- arguments -->
+    <arg name="path_qda_model" default='$(find qda_bci)/test/qda_test.yaml'/>
+    <arg name="samplerate" default='16'/>
+    <arg name="paradigm" default='mi'/>
+
+    <!-- node -->
+    <node name="qda_node" pkg="qda_bci" type="qda.py" output="screen"> 
+        <param name="path_qda_model"   value="$(arg path_qda_model)"/>
+        <param name="paradigm" value="$(arg paradigm)"/>
+    </node>
+
+    <!-- TEST NODES -->
+    <!-- logger node -->
+    <node pkg="qda_bci" type="test_logger_qda" name="test_logger_qda" output="screen">
+        <param name="output_filename" value="$(find qda_bci)/test/classified.csv"/>
+        <param name="paradigm" value="$(arg paradigm)"/>
+    </node>
+    
+    <!-- publisher node -->
+    <node pkg="qda_bci" type="test_publisher_qda" name="test_publisher_qda" output="screen">
+        <param name="csv_file" value="$(find qda_bci)/test/processed_data.csv"/>
+        <param name="sample_rate" value="$(arg samplerate)"/> 
+    </node>
+
+
+</launch>
