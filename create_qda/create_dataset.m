@@ -12,6 +12,7 @@ nclasses = length(classes);
 filterOrder = 4;
 avg = 1;
 threshold_gmm_ic = 0.5;
+do_hann = true;
 channels_label = {'Fz', 'FC3', 'FC1', 'FCz', 'FC2', 'FC4', 'C3', 'C1', 'Cz', 'C2', 'C4', 'Fp1', 'CP1', 'CPz', 'CP2', 'Fp2'};
 
 
@@ -75,7 +76,7 @@ for idx_file= 1: nFiles
     for idx_band = 1:nbands
         band = bands{idx_band};
 
-        [signal_processed, header_processed] = processing_onlineROS_CAR_hilbert(c_signal, header, nchannels, bufferSize, filterOrder, band, chunkSize, excl_chs);
+        [signal_processed, header_processed] = processing_onlineROS_CAR_hilbert(c_signal, header, nchannels, bufferSize, filterOrder, band, chunkSize, excl_chs, do_hann);
         
         c_header = headers{1, idx_band};
         c_header.sampleRate = header_processed.SampleRate/chunkSize;
