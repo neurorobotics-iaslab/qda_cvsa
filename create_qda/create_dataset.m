@@ -6,12 +6,16 @@ addpath('/home/paolo/bci_vr_ws/src/analysis_bci/utils')
 %% Initialization
 DATAPAH = '/home/paolo/bci_vr_ws/src/';
 paradigm = 'mi';
-classes = [771 773];
+if strcmp(paradigm, 'mi')
+    classes = [771 773];
+    % classes = [769 770];
+elseif strcmp(paradigm, 'cvsa')
+    classes = [730 731];
+end
 nchannels = 16;
 nclasses = length(classes);
 filterOrder = 4;
 avg = 1;
-threshold_gmm_ic = 0.5;
 do_hann = true;
 channels_label = {'Fz', 'FC3', 'FC1', 'FCz', 'FC2', 'FC4', 'C3', 'C1', 'Cz', 'C2', 'C4', 'Fp1', 'CP1', 'CPz', 'CP2', 'Fp2'};
 
