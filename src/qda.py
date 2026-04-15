@@ -22,11 +22,11 @@ class Qda:
         topic_sub = rospy.get_param('~topic_sub', '/eeg_power')
         
         try:
-            self.paradigm = rospy.get_param('~paradigm')
+            self.qda_paradigm = rospy.get_param('~qda_paradigm')
         except KeyError as e:
-            rospy.logfatal(f"[{self.qda_name}] Mandatory parameter: 'paradigm'. Error:{e}.")
+            rospy.logfatal(f"[{self.qda_name}] Mandatory parameter: 'qda_paradigm'. Error:{e}.")
             return
-        self.qda_name += f"_{self.paradigm}"
+        self.qda_name += f"_{self.qda_paradigm}"
         
         conf = self.configure()
         if not conf:
@@ -37,7 +37,7 @@ class Qda:
 
 
         rospy.Subscriber(topic_sub, eeg_power, self.callback)
-        self.pub = rospy.Publisher(f'/{self.paradigm}/neuroprediction/raw', NeuroOutput, queue_size=10)
+        self.pub = rospy.Publisher(f'/{self.qda_paradigm}/neuroprediction/raw', NeuroOutput, queue_size=10)
         
         rospy.spin()
         
