@@ -1,19 +1,22 @@
-## qda_cvsa
+## QDA Classifiers Node
 
-This directory contains the QDA (Quadratic Discriminant Analysis) classifier node. This node is responsible for the real-time classification of EEG (power-band) features, specifically to detect the **IC (Impaired Consciousness)** state using a pre-trained QDA model.
+This directory contains the QDA (Quadratic Discriminant Analysis) classifier node. This node is highly scalable, acting as an independent classification backbone for EEG (power-band) features. Depending on the pipeline configuration, **you can launch multiple instances of this node concurrently** (e.g., one QDA assigned to classify MI, and a separate parallel QDA assigned to CVSA).
 
 ---
 
 ### 1. Input
 
-* **Topic:** `/cvsa/eeg_power`
-* **Data:** The node subscribes to this topic. The message structure is defined by the `cvsa_processing` package. The node expects the `msg.data` field to contain a flattened matrix of EEG signal power, structured as `[channels x bands]`.
+* **Topic:** Default is `/eeg_power` but can be dynamically overridden via the `topic_sub` ros parameter.
+* **Data:** The node subscribes to this topic. The message structure is defined by the `processing_bci` module. The node expects the `msg.data` field to contain a flattened matrix of EEG signal power, structured as `[bands x channels]`.
 
 ---
 
 ### 2. Configuration
 
-This node **requires a YAML configuration file** that defines the QDA model and all necessary processing parameters. The model's YAML file is saved in the `cfg` repository (e.g., `cfg/qda_model.yaml`).
+This Python node **requires mandatory ROS parameters** and a YAML configuration file representing the pre-trained statistical model. 
+
+* `path_qda_model`: The absolute path where the configuration is stored. Models are structurally kept in paradigm-specific sub-folders (e.g., `cfg/mi/qda_model_mi.yaml` and `cfg/cvsa/qda_model_cvsa.yaml`).
+* `qda_paradigm`: A string representing the active task (e.g., `mi`, `cvsa`). This governs the naming convention and output topic routing.
 
 The YAML file must contain the following fields:
 
@@ -43,9 +46,10 @@ This script is responsible for:
 
 ### 4. Workflow
 
-1.  **Load Model:** The node loads the QDA parameters (priors, means, covariances, indices) from the specified YAML file.
-2.  **Receive Data:** It listens for incoming messages on `/cvsa/eeg_power`.
-3.  **Extract Features:** Using the `indices` from the YAML file, the node builds the feature vector from the incoming `msg.data` array.
+1.  **Initialization:** The node identifies its paradigm via `qda_paradigm` and validates the required parameters.
+2.  **Load Model:** The node loads the structural QDA parameters (priors, means, covariances, rotations, specific channels/bands) from the defined YAML file.
+3.  **Receive Data:** It listens for incoming messages on `/eeg_power` (or the user-defined `topic_sub`).
+4.  **Extract Features:** Using the `idchannels` and `bands` from the YAML file, the node accurately reshapes the input array into a `[bands x channels]` matrix and surgically extracts ONLY the relevant indices to build the final feature vector. A log transform (`np.log`) is applied to regularize the powers.
 4.  **Classify:** The node calculates the posterior probability for each class using the loaded QDA parameters and assigns the data to the class with the highest probability (Bayesian decision).
 5.  **Publish:** The node publishes the resulting classification probability (e.g., the probability of being in the IC state) to the output topic.
 
@@ -53,8 +57,8 @@ This script is responsible for:
 
 ### 5. Output
 
-* **Topic:** `/cvsa/neuroprediction/raw`
-* **Data:** Publishes the classification probability. It is a `NeuroOutput` message, defined by the `rosneuro` package.
+* **Topic:** `/{qda_paradigm}/neuroprediction/raw`
+* **Message Type:** Publishes both the soft-predictions (posterior probabilities) and a hard-prediction vector inside a `rosneuro_msgs/NeuroOutput` message.
 
 ---
 
@@ -62,10 +66,10 @@ This script is responsible for:
 
 The validation tests for this node are located in the `test` directory.
 
-The testing process validates the node's functionality by comparing the ROS node's output against a MATLAB simulation using the same model and data:
+The testing process validates the node's functionality by comparing the ROS node's output against a MATLAB simulation using the exact same statistical model and deterministic data structure:
 
-1.  **ROS Execution:** A launch file initiates the test. An auxiliary node publishes pre-defined data (e.g., from a CSV file) to the `/cvsa/eeg_power` topic. A second helper node subscribes to `/cvsa/neuroprediction/qda` and saves the resulting probabilities to a CSV file (e.g., `ros_output.csv`).
-2.  **MATLAB Verification:** The output CSV file (`ros_output.csv`) is loaded into MATLAB.
-3.  **Comparison:** The probabilities from the ROS node are compared against the results from an equivalent MATLAB implementation. This MATLAB script uses helper functions (also present in the `test` directory) that allow it to load and execute the QDA model from the YAML format generated by `sklearn` (Python). Both scripts process the *same* input data.
+1.  **ROS Execution:** A launch file initiates the benchmark. An auxiliary node publishes pre-defined data (e.g., from a CSV file) to the `/eeg_power` topic. A second helper node subscribes to the dynamic target topic (e.g., `/{qda_paradigm}/neuroprediction/raw`) and dumps the resulting Bayesian probabilities into an output CSV file (e.g., `ros_output.csv`).
+2.  **MATLAB Verification:** The output CSV file (`ros_output.csv`) is ingested locally into MATLAB.
+3.  **Comparison:** The sequence of probabilities outputted natively by the Python ROS node is mathematically differenced against the results from the equivalent MATLAB algorithm. The MATLAB script uses identical helper functions (also present in the `test` directory) to decode and instantiate the QDA boundary planes from the exact same YAML format. Both platforms process the *same* input sequence.
 
-The test passes if the output probabilities from ROS and MATLAB are (almost) identical. **Currently, the accepted error between the two implementations is on the order of $10^{-7}$.**
+The benchmark passes if the output probabilities from ROS and MATLAB are identically convergent. **Currently, the absolute accepted error between the discrete implementations is rigorously bound within the order of $10^{-7}$.**
