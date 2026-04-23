@@ -4,7 +4,7 @@ import yaml
 import pickle
 import rospy
 from processing_bci.msg import eeg_power
-from rosneuro_msgs.msg import NeuroOutput
+from rosneuro_msgs.msg import NeuroOutput, NeuroEvent
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 import numpy as np
 
@@ -36,7 +36,12 @@ class Qda:
             rospy.loginfo(f"[{self.qda_name}] QDA configurated correctly.")
 
 
+        self.baseline = 0.0
+        self.is_baseline_recording = False
+        self.baseline_buffer = []
+
         rospy.Subscriber(topic_sub, eeg_power, self.callback)
+        rospy.Subscriber('/events/bus', NeuroEvent, self.on_event)
         self.pub = rospy.Publisher(f'/{self.qda_paradigm}/neuroprediction/raw', NeuroOutput, queue_size=10)
         
         rospy.spin()
@@ -111,15 +116,37 @@ class Qda:
                 
         if(len(dfet) != self.nfeatures):
             rospy.logerr(f"[{self.qda_name}] Error in the feature extraction: expected {self.nfeatures} features, but got {len(dfet)}.")
-            return
+            return None
                 
-        dfet = np.log(dfet) # apply the log transfromation 
+        # Non applichiamo più il logaritmo qui per accumulare i valori lineari nel buffer
          
         return dfet
         
+    def on_event(self, msg):
+        if msg.event == 786:
+            self.is_baseline_recording = True
+            self.baseline_buffer = []
+            rospy.loginfo(f"[{self.qda_name}] Started baseline recording.")
+        elif hasattr(self, 'qda') and hasattr(self.qda, 'classes_') and msg.event in self.qda.classes_.astype(int):
+            if self.is_baseline_recording:
+                self.is_baseline_recording = False
+                if len(self.baseline_buffer) > 0:
+                    mean_val = np.mean(self.baseline_buffer, axis=0)
+                    self.baseline = np.log(mean_val)
+                    rospy.loginfo(f"[{self.qda_name}] Baseline computed: {self.baseline}")
+                else:
+                    rospy.logwarn(f"[{self.qda_name}] No power data received during baseline recording! Baseline remains {self.baseline}")
+
     def callback(self, msg):   
         
-        dfet = self.extract_features(msg)
+        raw_dfet = self.extract_features(msg)
+        if raw_dfet is None:
+            return
+            
+        if self.is_baseline_recording:
+            self.baseline_buffer.append(raw_dfet)
+            
+        dfet = np.log(raw_dfet) - self.baseline
         
         dfet = np.array(dfet).reshape(1, -1)
         probabilities = self.qda.predict_proba(dfet)[0]

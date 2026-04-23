@@ -19,7 +19,7 @@ parts = strsplit(name_no_ext, '.');
 paradigm = parts{end};
 subject = filenames{1}(1:2);
 time_str = datestr(now, 'ddmmyyyy_HHMMSS');
-save_path_qda_dataset = [DATAPAH 'qda_bci/create_qda/datasets/' paradigm '/data_' subject '_' time_str  '.mat'];
+save_path_qda_dataset = [DATAPAH 'qda_bci/create_qda/datasets/' paradigm '/data.' subject '.' time_str '.' paradigm '.mat'];
 
 %% Initialization
 nFiles = length(filenames);
@@ -64,21 +64,21 @@ for idx_file= 1: nFiles
 
     channels_label = header.Label(1:nchannels);
 
-    excl_ch = {'Fp1', 'Fp2', 'EOG'};
+    excl_ch = {'Fp1', 'Fp2'};
     [found, indices] = ismember(excl_ch, channels_label);
     excl_chs = indices(found);
 
     % for power band using hilbert transformation and artefact remotion -----------------------------------------------
     bufferSize = floor(avg*sampleRate);
-    chunkSize = 32;
+    chunkSize = 25;
     eog.filterOrder = 4;
     eog.band = [1 10];
-    eog.label = {'Fp1', 'Fp2'};
-    eog.h_threshold = 6000;
-    eog.v_threshold = 6000;
+    eog.label = excl_ch;
+    eog.h_threshold = 100;
+    eog.v_threshold = 100;
     picks.filterOrder = 4;
     picks.freq = 1; % remove antneuro problems
-    picks.threshold = 10000;
+    picks.threshold = 120;
     artifact = artifact_rejection(c_signal, header, nchannels, bufferSize, chunkSize, eog, picks);
     artifacts = cat(1, artifacts, artifact(:,:));
 
@@ -86,7 +86,8 @@ for idx_file= 1: nFiles
     for idx_band = 1:nbands
         band = bands{idx_band};
 
-        [signal_processed, header_processed] = processing_onlineROS_CAR_hilbert(c_signal, header, nchannels, bufferSize, filterOrder, band, chunkSize, excl_chs, do_hann);
+%         [signal_processed, header_processed] = processing_onlineROS_CAR_hilbert(c_signal, header, nchannels, bufferSize, filterOrder, band, chunkSize, excl_chs, do_hann);
+        [signal_processed, header_processed] = processing_onlineROS_hilbert(c_signal, header, nchannels, bufferSize, filterOrder, band, chunkSize, do_hann);
         
         c_header = headers{1, idx_band};
         c_header.sampleRate = header_processed.SampleRate/chunkSize;
@@ -171,9 +172,26 @@ artifacts_data = tmp_art;
 
 
 %% extract and save data for the QDA
-data = trial_data(minDurCue+minDurFix+1:end,:,:,:); % data x bands x channels x trial
+data_cf = trial_data(minDurCue+minDurFix+1:end,:,:,:); % data x bands x channels x trial
+data_fix = trial_data(1:minDurFix,:,:,:);
 artifacts_cf = artifacts_data(minDurCue+minDurFix+1:end,:,:,:);
-nsamples = size(data,1);
+artifacts_fix = artifacts_data(1:minDurFix,:,:,:);
+nsamples_fix = size(data_fix, 1);
+baseline = nan(ntrial, nbands, nchannels);
+for idx_band= 1:nbands
+    for idx_trial = 1:ntrial
+        tmp_X = [];
+        for idx_sample = 1:nsamples_fix
+            if artifacts_fix(idx_sample, idx_trial) == 0
+                tmp_X = [tmp_X; data_fix(idx_sample, idx_band,:,idx_trial)];
+            end
+        end
+        baseline(idx_trial,idx_band,:) = squeeze(mean(tmp_X,1));
+    end
+    
+end
+baseline = log(baseline);
+nsamples_cf = size(data_cf,1);
 X = []; 
 y = []; 
 count_artifact = 0; count_all = 0;
@@ -182,9 +200,10 @@ for idx_band = 1:nbands
     y = [];
     trials = []; 
     for idx_trial =  1:ntrial
-        for idx_sample = 1:nsamples
+        for idx_sample = 1:nsamples_cf
             if artifacts_cf(idx_sample,idx_trial) == 0 % no artifact
-                tmp_X = [tmp_X; data(idx_sample,idx_band,:,idx_trial)];
+                c_x = log(data_cf(idx_sample,idx_band,:,idx_trial)) - baseline(idx_trial, idx_band,:);
+                tmp_X = [tmp_X; c_x];
                 trials = [trials, idx_trial];
                 y = [y; trial_typ(idx_trial)];
             else
@@ -206,10 +225,10 @@ label_fisher = [];
 for idx_ch=1:nchannels
     for idx_band = 1:nbands
         % all
-        mu1 = mean(log(X(y == classes(1), idx_band, idx_ch)));
-        sigma1 = std(log(X(y == classes(1),idx_band, idx_ch)));
-        mu2 = mean(log(X(y == classes(2),idx_band, idx_ch)));
-        sigma2 = std(log(X(y == classes(2),idx_band, idx_ch)));
+        mu1 = mean(X(y == classes(1), idx_band, idx_ch));
+        sigma1 = std(X(y == classes(1),idx_band, idx_ch));
+        mu2 = mean(X(y == classes(2),idx_band, idx_ch));
+        sigma2 = std(X(y == classes(2),idx_band, idx_ch));
         fisher(idx_band, idx_ch) = abs(mu1 - mu2)^2 / (sigma1^2 + sigma2^2);
         label_fisher = [label_fisher, {[bands_str{idx_band}]}];
     end
@@ -224,11 +243,11 @@ sgtitle(['fisher score | ' paradigm])
 
 % R^2
 for idx_band = 1:nbands
-    r2 = calc_r2_from_data(squeeze(log(X(:,idx_band,:))), y, 'Plot', true, 'ChanLabels', channels_label, 'title_data', paradigm);
+    r2 = calc_r2_from_data(squeeze(X(:,idx_band,:)), y, 'Plot', true, 'ChanLabels', channels_label, 'title_data', paradigm);
 end
 
 %% save data for qda
-channels_labels =  [{{'Oz'}}, {{}}]; % first 8-14 then 18-24
+channels_labels =  [{{'C4', 'C3'}}, {{}}]; % first 8-14 then 18-24
 idx_channels = [];
 for i = 1:length(channels_labels)
     c_t = channels_labels{i};

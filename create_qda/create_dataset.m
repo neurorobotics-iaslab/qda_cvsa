@@ -70,15 +70,15 @@ for idx_file= 1: nFiles
 
     % for power band using hilbert transformation and artefact remotion -----------------------------------------------
     bufferSize = floor(avg*sampleRate);
-    chunkSize = 32;
+    chunkSize = 25;
     eog.filterOrder = 4;
     eog.band = [1 10];
     eog.label = excl_ch;
-    eog.h_threshold = 6000;
-    eog.v_threshold = 6000;
+    eog.h_threshold = 100;
+    eog.v_threshold = 100;
     picks.filterOrder = 4;
     picks.freq = 1; % remove antneuro problems
-    picks.threshold = 10000;
+    picks.threshold = 120;
     artifact = artifact_rejection(c_signal, header, nchannels, bufferSize, chunkSize, eog, picks);
     artifacts = cat(1, artifacts, artifact(:,:));
 
@@ -86,7 +86,8 @@ for idx_file= 1: nFiles
     for idx_band = 1:nbands
         band = bands{idx_band};
 
-        [signal_processed, header_processed] = processing_onlineROS_CAR_hilbert(c_signal, header, nchannels, bufferSize, filterOrder, band, chunkSize, excl_chs, do_hann);
+%         [signal_processed, header_processed] = processing_onlineROS_CAR_hilbert(c_signal, header, nchannels, bufferSize, filterOrder, band, chunkSize, excl_chs, do_hann);
+        [signal_processed, header_processed] = processing_onlineROS_hilbert(c_signal, header, nchannels, bufferSize, filterOrder, band, chunkSize, do_hann);
         
         c_header = headers{1, idx_band};
         c_header.sampleRate = header_processed.SampleRate/chunkSize;
@@ -228,7 +229,7 @@ for idx_band = 1:nbands
 end
 
 %% save data for qda
-channels_labels =  [{{'P7','Oz', 'P10'}}, {{}}]; % first 8-14 then 18-24
+channels_labels =  [{{'C4', 'CP6', 'P8', 'P4'}}, {{}}]; % first 8-14 then 18-24
 idx_channels = [];
 for i = 1:length(channels_labels)
     c_t = channels_labels{i};
