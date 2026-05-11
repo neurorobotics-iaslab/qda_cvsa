@@ -1,3 +1,4 @@
+% baseline subtraction!
 clear all; % close all;
 
 addpath('/home/paolo/bci_vr_ws/src/analysis_bci/equal_ros')
@@ -39,7 +40,7 @@ nchannels = 32;
 nclasses = length(classes);
 filterOrder = 4;
 avg = 1;
-do_hann = true;
+do_hann = false;
 
 %% start processing data
 bands = [{[8 14]} {[18 24]}];
